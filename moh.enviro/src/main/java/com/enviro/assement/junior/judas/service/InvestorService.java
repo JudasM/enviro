@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,20 +45,39 @@ public class InvestorService {
 
         }
 
-    public boolean allowInvestorWithdrawal(long id) {
+    public boolean allowInvestorWithdrawal(long id, Double withdrawalAmount, String portfolioName) {
 
         int investorAge = checkInvestorAge(id);
+        boolean isPortfolioBalanceEnough = checkPortfolioBalanceBeforeWithdrawal(id, portfolioName, withdrawalAmount);
 
-        if(investorAge > 65) {
+        if(investorAge > 65 && isPortfolioBalanceEnough) {
             //another needed check for balance
             return true;
         }
         else
         {
-            System.out.println("Age is not high enough");
+            System.out.println("Age is not high enough or portfolio balance is not enough");
             return false;
         }
     }
+
+    public boolean checkPortfolioBalanceBeforeWithdrawal(Long id, String portfolioName, Double withdrawalAmount) {
+
+        Investor investor = investorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        Double portfolioValue = investor.getPortfolios().stream().filter(portfolio -> portfolio.getPortfolioName().equals(portfolioName)).findFirst().get().getPortfolioValue(); // ai generated -- using intellij
+
+        if(withdrawalAmount > portfolioValue) {
+            System.out.println("Withdrawal amount is greater than portfolio value");
+            return false;
+        }
+
+        else
+            return true;
+
+    }
+
 
 
 
